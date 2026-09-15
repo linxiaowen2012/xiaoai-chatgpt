@@ -1,0 +1,4 @@
+interface:
+  display_name: "小爱同学接入 ChatGPT"
+  short_description: "配置并运行 MiGPT，让小爱音箱接入 ChatGPT 兼容模型"
+  default_prompt: "使用 $xiaoai-chatgpt 配置并验证本地小爱音箱接入 ChatGPT。"
