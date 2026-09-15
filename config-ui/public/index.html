@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>小爱同学接入 ChatGPT</title>
+  <style>
+    :root{--ink:#1f2926;--muted:#66736e;--line:#dfe7e3;--paper:#f4f7f3;--card:#fff;--green:#1f6b53;--green-dark:#164d3c;--amber:#b87820;--danger:#a33a36}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+    .shell{max-width:920px;margin:0 auto;padding:28px 22px 64px}.topbar{display:flex;justify-content:flex-end;margin-bottom:24px}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}.eyebrow{color:var(--green);font-weight:700;letter-spacing:.08em;font-size:12px;text-transform:uppercase}
+    h1{font-size:34px;line-height:1.15;margin:10px 0 12px;letter-spacing:-.03em}h2{font-size:18px;margin:0 0 4px}.lead{color:var(--muted);max-width:660px;margin:0 0 28px}
+    .status{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#e7f1eb;border:1px solid #c8ded1;padding:12px 16px;margin-bottom:18px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--amber);margin-right:8px}.dot.on{background:#2a9569}
+    .card{background:var(--card);border:1px solid var(--line);padding:22px;margin-top:16px;box-shadow:0 8px 28px #254d3910}.section-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:16px}.hint{color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:flex;flex-direction:column;gap:6px}.wide{grid-column:1/-1}label{font-weight:650;font-size:14px}input{width:100%;border:1px solid #cbd7d1;background:#fcfdfc;padding:11px 12px;font:inherit;color:var(--ink);border-radius:4px}input:focus{outline:3px solid #cfe6da;border-color:var(--green)}
+    .field small{color:var(--muted);font-size:12px}.secret{letter-spacing:.05em}.actions{display:flex;align-items:center;gap:12px;margin-top:22px}.primary,.secondary{border:0;border-radius:4px;padding:11px 18px;font:inherit;font-weight:700;cursor:pointer}.primary{background:var(--green);color:white}.primary:hover{background:var(--green-dark)}.secondary{background:#e8efeb;color:var(--green-dark)}button:disabled{opacity:.6;cursor:wait}.message{min-height:24px;color:var(--muted);font-size:13px}.message.ok{color:var(--green)}.message.error{color:var(--danger)}
+    .privacy{background:#fff9ed;border-left:3px solid #d39a42;padding:12px 14px;color:#76521f;font-size:13px;margin-top:16px}.help{color:var(--muted);font-size:13px}.help summary{cursor:pointer;color:var(--green);font-weight:700}.help ul{margin:10px 0 0;padding-left:20px}.footer{color:var(--muted);font-size:12px;margin-top:22px}.hero-action{background:var(--green-dark);color:#fff;border:0;border-radius:4px;padding:12px 16px;font:inherit;font-weight:750;cursor:pointer;white-space:nowrap}.hero-action:hover{background:#103d30}.hero-action:disabled{opacity:.6;cursor:wait}@media(max-width:680px){.shell{padding-top:22px}.hero{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.wide{grid-column:auto}.status{align-items:flex-start;flex-direction:column}.actions{align-items:stretch;flex-direction:column}.primary,.secondary,.hero-action{width:100%}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar"><button id="quickStart" class="hero-action" type="button">启动AI版小爱同学</button></div>
+    <div class="hero"><div><div class="eyebrow">MiGPT · Local setup</div><h1>小爱同学接入 ChatGPT</h1></div><button id="checkAi" class="secondary" type="button">检查 AI 是否已连接</button></div>
+    <p class="lead">在这里填写配置，点击保存即可更新本机 MiGPT 文件。已有密钥不会回显；密码框留空表示保留原值。</p>
+    <div class="status"><div><span id="dot" class="dot"></span><strong id="statusText">正在检查 Docker…</strong></div><span class="hint">仅本机访问 · 127.0.0.1</span></div>
+
+    <form id="form">
+      <section class="card">
+        <div class="section-head"><div><h2>大模型 API</h2><div class="hint">兼容 OpenAI 接口的中转站或官方接口</div></div><div id="apiState" class="hint"></div></div>
+        <div class="grid">
+          <div class="field wide"><label for="baseUrl">Base URL</label><input id="baseUrl" name="baseUrl" type="url" required placeholder="https://example.com/v1"><small>通常以 /v1 结尾，不要填写完整的聊天路径。</small></div>
+          <div class="field"><label for="model">模型 ID</label><input id="model" name="model" required placeholder="gpt-5.6-luna"></div>
+          <div class="field"><label for="apiKey">API Key</label><input id="apiKey" name="apiKey" type="password" autocomplete="off" placeholder="留空则保留当前 Key"><small>只保存到本机 .env，不会上传。</small></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head"><div><h2>小米音箱</h2><div class="hint">用于连接米家账号和指定音箱</div></div><div id="miState" class="hint"></div></div>
+        <div class="grid">
+          <div class="field"><label for="userId">小米 ID</label><input id="userId" name="userId" required placeholder="不是手机号"></div>
+          <div class="field"><label for="did">音箱名称</label><input id="did" name="did" required placeholder="例如：小米AI音箱"><small>必须与米家 App 中显示的名称完全一致。</small></div>
+          <div class="field"><label for="password">小米账号密码</label><input id="password" name="password" type="password" autocomplete="off" placeholder="留空则保留当前密码"></div>
+          <div class="field"><label for="passToken">passToken（可选）</label><input id="passToken" name="passToken" type="password" autocomplete="off" placeholder="留空则保留当前授权"><small>如果使用 Cookie 授权，在此粘贴；不要发到聊天。</small></div>
+        </div>
+      </section>
+
+      <details class="card help"><summary>新手：这些信息在哪里获取？</summary><ul><li><strong>小米 ID：</strong>打开 account.xiaomi.com 的个人信息页，复制“小米 ID”，不是手机号。</li><li><strong>音箱名称：</strong>打开米家 App，进入音箱设备详情，填写页面显示的设备名称，必须完全一致。</li><li><strong>API Key、Base URL、模型：</strong>从你的中转站控制台复制。Base URL 通常以 <code>/v1</code> 结尾，模型填写控制台提供的模型 ID。</li><li><strong>passToken：</strong>仅在验证码授权反复失败时使用。它等同账号凭据，只保存在本机，绝不要发给别人或上传 GitHub。</li></ul></details>
+      <div class="privacy">安全提醒：此页面只监听本机 127.0.0.1。不要把 .env、.migpt.js、.mi.json 或桌面启动脚本上传到公开仓库。</div>
+      <div class="actions"><button class="primary" id="save" type="submit">保存配置</button><button class="secondary" id="start" type="button">保存并启动 MiGPT</button><span id="message" class="message" role="status"></span></div>
+    </form>
+    <div class="footer">配置文件位置：当前项目目录下的 .env、.migpt.js、.mi.json</div>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const form = $("form"), message = $("message"), save = $("save"), start = $("start"), quickStart = $("quickStart"), checkAi = $("checkAi");
+    const setMessage = (text, type = "") => { message.textContent = text; message.className = `message ${type}`; };
+    async function status() { try { const r = await fetch("/api/status"); const d = await r.json(); $("dot").className = `dot ${d.running ? "on" : ""}`; $("statusText").textContent = d.running ? "MiGPT 正在运行" : "MiGPT 未运行"; } catch { $("statusText").textContent = "配置服务不可用"; } }
+    async function load() { const r = await fetch("/api/config"); const d = await r.json(); ["baseUrl","model","userId","did"].forEach(k => $(k).value = d[k] || ""); $("apiState").textContent = d.hasApiKey ? "API Key 已配置" : "API Key 未配置"; $("miState").textContent = `${d.hasPassword ? "密码已配置" : "密码未配置"} · ${d.hasPassToken ? "授权已配置" : "授权未配置"}`; await status(); }
+    function payload() { return Object.fromEntries(new FormData(form).entries()); }
+    async function saveConfig() { const r = await fetch("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload()) }); const d = await r.json(); if (!r.ok) throw new Error(d.error || "保存失败"); }
+    async function startService() { const r = await fetch("/api/start", { method: "POST" }); const d = await r.json(); if (!r.ok || !d.ok) throw new Error(d.error || "Docker 启动失败"); }
+    async function checkConnection() { checkAi.disabled = true; setMessage("正在检查 AI 连接…"); try { const r = await fetch("/api/check", { method: "POST" }); const d = await r.json(); setMessage(d.message, d.linked ? "ok" : "error"); } catch { setMessage("检查失败，请确认配置页面仍在运行", "error"); } finally { checkAi.disabled = false; } }
+    form.addEventListener("submit", async (e) => { e.preventDefault(); save.disabled = true; setMessage("正在保存…"); try { await saveConfig(); setMessage("配置已保存", "ok"); await load(); } catch (e) { setMessage(e.message, "error"); } finally { save.disabled = false; } });
+    async function startFromSavedConfig(button) { button.disabled = true; setMessage("正在启动 AI 版小爱同学…"); try { await startService(); setMessage("AI 版小爱同学已启动", "ok"); await status(); } catch (e) { setMessage(e.message, "error"); } finally { button.disabled = false; } }
+    start.addEventListener("click", async () => { start.disabled = true; save.disabled = true; setMessage("正在保存并启动…"); try { await saveConfig(); await startService(); setMessage("配置已保存，AI 版小爱同学已启动", "ok"); await status(); } catch (e) { setMessage(e.message, "error"); } finally { start.disabled = false; save.disabled = false; } });
+    quickStart.addEventListener("click", () => startFromSavedConfig(quickStart));
+    checkAi.addEventListener("click", checkConnection);
+    load().catch(e => setMessage(e.message, "error"));
+  </script>
+</body>
+</html>
