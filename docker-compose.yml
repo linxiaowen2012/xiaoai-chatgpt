@@ -1,0 +1,10 @@
+services:
+  mi-gpt:
+    image: idootop/mi-gpt:latest
+    container_name: mi-gpt
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./.migpt.js:/app/.migpt.js:ro
+      - ./.mi.json:/app/.mi.json:ro
